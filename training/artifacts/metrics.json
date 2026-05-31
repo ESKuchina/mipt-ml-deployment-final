@@ -1,0 +1,6 @@
+{
+  "recall_stockout":0.8573943662,
+  "precision_stockout":0.9864956111,
+  "roc_auc":0.9911127872,
+  "pr_auc":0.985122964
+}

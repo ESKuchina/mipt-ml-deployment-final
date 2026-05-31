@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ml_user
       POSTGRES_PASSWORD: ml_password
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,14 +23,14 @@ services:
       mlflow server
       --host 0.0.0.0
       --port 5000
-      --backend-store-uri sqlite:///mlflow.db
+      --backend-store-uri sqlite:////mlflow/mlflow.db
       --default-artifact-root /mlflow/artifacts
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
-      - mlflow_data:/mlflow/artifacts
+      - mlflow_data:/mlflow
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000 || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000')"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -49,8 +49,17 @@ services:
     volumes:
       - ../airflow/dags:/opt/airflow/dags
       - ../training:/opt/airflow/training
+      - ../service:/opt/airflow/service
     entrypoint: /bin/bash
-    command: -c "airflow db migrate && airflow users create --username admin --password admin --firstname Ekaterina --lastname Kuchina --role Admin --email kuchina.helper@gmail.com || true"
+    command: >
+      -c "airflow db migrate &&
+          (airflow users create
+          --username admin
+          --password admin
+          --firstname Ekaterina
+          --lastname Kuchina
+          --role Admin
+          --email kuchina.helper@gmail.com || true)"
 
   airflow-webserver:
     image: apache/airflow:2.9.3
@@ -69,11 +78,12 @@ services:
     volumes:
       - ../airflow/dags:/opt/airflow/dags
       - ../training:/opt/airflow/training
+      - ../service:/opt/airflow/service
     ports:
-      - "8080:8080"
+      - "8081:8080"
     command: webserver
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
       interval: 20s
       timeout: 10s
       retries: 5
@@ -94,6 +104,7 @@ services:
     volumes:
       - ../airflow/dags:/opt/airflow/dags
       - ../training:/opt/airflow/training
+      - ../service:/opt/airflow/service
     command: scheduler
 
   fastapi-blue:
@@ -102,6 +113,7 @@ services:
       dockerfile: Dockerfile
     container_name: fastapi-blue
     environment:
+      APP_VERSION: "0.1.0"
       MODEL_VERSION: blue
       MODEL_PATH: /app/models/current/model.joblib
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -124,6 +136,7 @@ services:
       dockerfile: Dockerfile
     container_name: fastapi-green
     environment:
+      APP_VERSION: "0.1.0"
       MODEL_VERSION: green
       MODEL_PATH: /app/models/current/model.joblib
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -164,7 +177,7 @@ services:
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
     ports:
-      - "9090:9090"
+      - "9091:9090"
     depends_on:
       - fastapi-blue
       - fastapi-green
@@ -173,7 +186,7 @@ services:
     image: grafana/grafana:latest
     container_name: ml-grafana
     ports:
-      - "3000:3000"
+      - "3001:3000"
     depends_on:
       - prometheus
 

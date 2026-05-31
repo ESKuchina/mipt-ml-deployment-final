@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import os
 import time
 from typing import Any, Optional
+from dataclasses import asdict
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
@@ -68,7 +69,7 @@ def _to_feature_payload(request: PredictRequest) -> FeaturePayload:
 
 
 def _build_frame(payload: FeaturePayload) -> pd.DataFrame:
-    row = payload.model_dump()
+    row = asdict(payload)
     return pd.DataFrame([row], columns=get_expected_features())
 
 
