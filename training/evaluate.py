@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import joblib
+import mlflow
 import pandas as pd
 from sklearn.metrics import average_precision_score, precision_score, recall_score, roc_auc_score
 
@@ -36,6 +37,8 @@ FEATURES = [
 ]
 TARGET = "stockout_target"
 
+MLFLOW_TRACKING_URI = "http://mlflow:5000"
+
 
 def main() -> None:
     dataset_path = ARTIFACTS_DIR / "training_dataset.csv"
@@ -50,6 +53,7 @@ def main() -> None:
     artifact = joblib.load(model_path)
     model = artifact["model"]
     threshold = float(artifact.get("threshold", 0.50))
+    mlflow_run_id = artifact.get("mlflow_run_id")
 
     X = df[FEATURES]
     y = df[TARGET]
@@ -58,14 +62,20 @@ def main() -> None:
     pred = (score >= threshold).astype(int)
 
     metrics = {
-        "recall_stockout": recall_score(y, pred),
-        "precision_stockout": precision_score(y, pred),
-        "roc_auc": roc_auc_score(y, score),
-        "pr_auc": average_precision_score(y, score),
+        "full_recall_stockout": recall_score(y, pred),
+        "full_precision_stockout": precision_score(y, pred),
+        "full_roc_auc": roc_auc_score(y, score),
+        "full_pr_auc": average_precision_score(y, score),
     }
 
     metrics_path = ARTIFACTS_DIR / "metrics.json"
     pd.Series(metrics).to_json(metrics_path, indent=2)
+
+    if mlflow_run_id:
+        mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+        with mlflow.start_run(run_id=mlflow_run_id):
+            for name, value in metrics.items():
+                mlflow.log_metric(name, float(value))
 
     print("Результаты оценки:")
     for name, value in metrics.items():
