@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "fastapi-blue"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["fastapi-blue:8000"]
+
+  - job_name: "fastapi-green"
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["fastapi-green:8000"]
+
+  - job_name: "nginx"
+    metrics_path: /health
+    static_configs:
+      - targets: ["nginx:80"]
