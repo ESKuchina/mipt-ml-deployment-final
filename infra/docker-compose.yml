@@ -24,7 +24,8 @@ services:
       --host 0.0.0.0
       --port 5000
       --backend-store-uri sqlite:////mlflow/mlflow.db
-      --default-artifact-root /mlflow/artifacts
+      --artifacts-destination /mlflow/artifacts
+      --serve-artifacts
     ports:
       - "5001:5000"
     volumes:
@@ -36,7 +37,9 @@ services:
       retries: 5
 
   airflow-init:
-    image: apache/airflow:2.9.3
+    build:
+      context: ../airflow
+      dockerfile: Dockerfile
     container_name: airflow-init
     depends_on:
       postgres:
@@ -46,6 +49,7 @@ services:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://ml_user:ml_password@postgres:5432/stockout_ml
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "stockout-airflow-secret-key"
     volumes:
       - ../airflow/dags:/opt/airflow/dags
       - ../training:/opt/airflow/training
@@ -53,16 +57,18 @@ services:
     entrypoint: /bin/bash
     command: >
       -c "airflow db migrate &&
-          (airflow users create
-          --username admin
-          --password admin
-          --firstname Ekaterina
-          --lastname Kuchina
-          --role Admin
-          --email kuchina.helper@gmail.com || true)"
+      (airflow users create
+      --username admin
+      --password admin
+      --firstname Ekaterina
+      --lastname Kuchina
+      --role Admin
+      --email kuchina.helper@gmail.com || true)"
 
   airflow-webserver:
-    image: apache/airflow:2.9.3
+    build:
+      context: ../airflow
+      dockerfile: Dockerfile
     container_name: airflow-webserver
     depends_on:
       postgres:
@@ -75,6 +81,7 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://ml_user:ml_password@postgres:5432/stockout_ml
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "True"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "stockout-airflow-secret-key"
     volumes:
       - ../airflow/dags:/opt/airflow/dags
       - ../training:/opt/airflow/training
@@ -89,7 +96,9 @@ services:
       retries: 5
 
   airflow-scheduler:
-    image: apache/airflow:2.9.3
+    build:
+      context: ../airflow
+      dockerfile: Dockerfile
     container_name: airflow-scheduler
     depends_on:
       postgres:
@@ -101,6 +110,7 @@ services:
       AIRFLOW__CORE__EXECUTOR: SequentialExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://ml_user:ml_password@postgres:5432/stockout_ml
       AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__WEBSERVER__SECRET_KEY: "stockout-airflow-secret-key"
     volumes:
       - ../airflow/dags:/opt/airflow/dags
       - ../training:/opt/airflow/training

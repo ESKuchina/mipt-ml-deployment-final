@@ -43,7 +43,7 @@ FEATURES = [
 TARGET = "stockout_target"
 
 MLFLOW_TRACKING_URI = "http://mlflow:5000"
-EXPERIMENT_NAME = "stockout-risk-training"
+EXPERIMENT_NAME = "stockout-risk-training-v2"
 
 
 def main() -> None:
