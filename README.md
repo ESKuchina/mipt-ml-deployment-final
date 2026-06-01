@@ -89,7 +89,11 @@
 - `docs/sli_slo.md` — SLI/SLO на техническом, модельном и бизнесовом уровнях;
 - `docs/mdd_adr.md` — ADR с решением по Metrics Driven Development.
 
-## API сервиса
+## Публичный сервис
+
+Сервис развернут в облаке и доступен по адресу:
+
+- https://stockout-risk-service.onrender.com
 
 ### Проверка доступности
 
@@ -98,7 +102,7 @@
 Пример:
 
 ```bash
-curl http://localhost/health
+curl https://stockout-risk-service.onrender.com/health
 ```
 
 ### Получение предсказания
@@ -108,7 +112,7 @@ curl http://localhost/health
 Пример:
 
 ```bash
-curl -X POST http://localhost/predict \
+curl -X POST https://stockout-risk-service.onrender.com/predict \
   -H "Content-Type: application/json" \
   -d '{
     "sku_id": 101,
@@ -254,6 +258,8 @@ URL: `http://localhost:3001`
 - [метрики run в MLflow](screenshots/07_mlflow_run_metrics.png)
 - [targets в Prometheus](screenshots/08_prometheus_targets.png)
 - [дашборд Grafana](screenshots/09_grafana_dashboard.png)
+- [статус сервиса в Render](screenshots/10_render_live_service.png)
+- [проверка cloud health/predict](screenshots/11_render_health_or_predict.png)
 
 ## Что реализовано в проекте
 
@@ -265,7 +271,8 @@ URL: `http://localhost:3001`
 - Airflow DAG;
 - MLflow;
 - мониторинг в Prometheus и Grafana;
-- blue-green схема маршрутизации.
+- blue-green схема маршрутизации;
+- облачное развертывание API-сервиса на Render.
 
 ## Вывод
 
